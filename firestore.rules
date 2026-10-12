@@ -1,15 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Surveys can be read publicly. The builder can create and update surveys.
-    match /surveys/{surveyId} {
-      allow read: if true;
-      allow create, update: if true;
+    function isSurveyOwner(ownerId) {
+      return request.auth != null && request.auth.uid == ownerId;
+    }
+
+    match /users/{ownerId}/surveys/{surveyId} {
+      // A public link may read a published survey to render the form. Owners can
+      // also read the removed state so the host can view it in their workspace.
+      allow get: if isSurveyOwner(ownerId)
+        || resource.data.status == 'published'
+        || resource.data.status == 'removed';
+      allow list: if isSurveyOwner(ownerId);
+      allow create: if isSurveyOwner(ownerId)
+        && request.resource.data.ownerId == ownerId
+        && request.resource.data.status == 'published';
+      allow update: if isSurveyOwner(ownerId)
+        && request.resource.data.ownerId == ownerId;
       allow delete: if false;
 
-      // The dashboard is client-side, so response reads are public. Never allow deletion.
       match /responses/{responseId} {
-        allow create, read: if true;
+        // Anyone with a published survey link may respond without signing in.
+        allow create: if get(/databases/$(database)/documents/users/$(ownerId)/surveys/$(surveyId)).data.status == 'published';
+        // Only the survey owner may view submitted responses or results.
+        allow read: if isSurveyOwner(ownerId);
         allow update, delete: if false;
       }
     }

@@ -1,15 +1,16 @@
-import { addDoc, collection, doc, getDoc, increment, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { addDoc, collection, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { db, configured, showConfigError } from "./firebase.js";
-import { esc, queryId } from "./shared.js";
+import { esc, queryId, queryOwner } from "./shared.js";
 
 const state = document.querySelector("#survey-state");
 const id = queryId();
+const ownerId = queryOwner();
 
 if (!configured) showConfigError(state, " and publish your Firestore rules");
-else if (!id) {
+else if (!id || !ownerId) {
   state.innerHTML = `<div class="empty-state"><h2>Survey link is incomplete</h2><p>Ask the survey owner for a complete link.</p></div>`;
 } else try {
-  const surveyRef = doc(db, "surveys", id);
+  const surveyRef = doc(db, "users", ownerId, "surveys", id);
   const snapshot = await getDoc(surveyRef);
   if (!snapshot.exists()) {
     state.innerHTML = `<div class="empty-state"><h2>Survey not found</h2><p>This link may be incorrect or the survey is no longer available.</p></div>`;
@@ -31,14 +32,14 @@ else if (!id) {
           <button class="button button-primary button-large" type="submit">Submit response <span aria-hidden="true">→</span></button>
         </form>
         <p class="privacy-note">Your response is shared with the survey creator.</p>`;
-      document.querySelector("#response-form").addEventListener("submit", event => submitResponse(event, survey, surveyRef, id));
+      document.querySelector("#response-form").addEventListener("submit", event => submitResponse(event, survey, ownerId, id));
     }
   }
 } catch (error) {
   state.innerHTML = `<div class="error-state"><h2>Couldn’t load this survey</h2><p>${esc(error.message)}. Check your Firebase configuration and Firestore rules.</p></div>`;
 }
 
-async function submitResponse(event, survey, surveyRef, surveyId) {
+async function submitResponse(event, survey, ownerId, surveyId) {
   event.preventDefault();
   const form = event.currentTarget;
   const errorBox = document.querySelector("#form-error");
@@ -62,8 +63,7 @@ async function submitResponse(event, survey, surveyRef, surveyId) {
   submit.disabled = true;
   submit.textContent = "Submitting…";
   try {
-    await addDoc(collection(db, "surveys", surveyId, "responses"), { answers, submittedAt: serverTimestamp() });
-    await updateDoc(surveyRef, { responseCount: increment(1) });
+    await addDoc(collection(db, "users", ownerId, "surveys", surveyId, "responses"), { answers, submittedAt: serverTimestamp() });
     state.innerHTML = `<div class="thank-you"><div class="success-mark">✓</div><p class="eyebrow">RESPONSE RECEIVED</p><h1>Thank you!</h1><p class="muted">Your response has been submitted successfully.</p></div>`;
   } catch (error) {
     errorBox.textContent = `Couldn’t submit your response: ${error.message}`;

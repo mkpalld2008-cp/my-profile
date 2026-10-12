@@ -3,16 +3,29 @@
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0c1020"><title>Surveys · Formcraft</title>
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/survey-actions.css">
+  <link rel="stylesheet" href="css/styles.css"><link rel="stylesheet" href="css/survey-actions.css"><link rel="stylesheet" href="css/auth.css">
 </head>
 <body>
-  <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">F</span> Formcraft</a><nav><a class="nav-link active" href="index.html">My surveys</a></nav><a class="button button-primary" href="builder.html">＋ New survey</a></header>
+  <header class="topbar"><a class="brand" href="index.html"><span class="brand-mark">F</span> Formcraft</a><nav><a class="nav-link active" href="index.html">My surveys</a></nav><span id="user-email" class="topbar-note" hidden></span><button id="sign-out" class="button button-quiet" type="button" hidden>Sign out</button></header>
   <main class="page-shell">
-    <section class="hero"><div><p class="eyebrow">YOUR WORKSPACE</p><h1>Surveys that ask<br>the right questions.</h1><p class="muted">Create a form, share it with anyone, and turn responses into insight.</p></div><a class="button button-primary button-large" href="builder.html">Create a survey <span aria-hidden="true">→</span></a></section>
-    <section class="section-heading"><div><h2>Your surveys</h2><p class="muted">Manage forms and see how they’re performing.</p></div><span id="survey-count" class="count-pill">—</span></section>
-    <div id="notice" class="notice" role="status" aria-live="polite"></div>
-    <section id="survey-list" class="survey-grid" aria-label="Your surveys"><div class="loading-card">Loading your surveys…</div></section>
+    <div id="auth-loading" class="loading-card">Checking sign-in…</div>
+    <section id="auth-gate" class="auth-gate" hidden>
+      <div class="panel auth-card"><p class="eyebrow">YOUR PRIVATE WORKSPACE</p><h1 id="auth-title">Sign in to Formcraft</h1><p class="muted">Your surveys and results are private to your account. Respondents can still open survey links without signing in.</p>
+        <form id="auth-form" class="auth-form">
+          <label class="field-label" for="auth-email">Email</label><input id="auth-email" name="email" class="text-input" type="email" autocomplete="email" required placeholder="you@example.com">
+          <label class="field-label" for="auth-password">Password</label><input id="auth-password" name="password" class="text-input" type="password" autocomplete="current-password" minlength="6" required placeholder="At least 6 characters">
+          <div id="auth-message" class="inline-error" role="alert" aria-live="polite"></div>
+          <button id="auth-submit" class="button button-primary button-large" type="submit">Sign in</button>
+        </form>
+        <div class="auth-actions"><button id="auth-mode" class="button button-quiet" type="button">Create an account</button><button id="reset-password" class="button button-quiet" type="button">Forgot password?</button></div>
+      </div>
+    </section>
+    <div id="dashboard" hidden>
+      <section class="hero"><div><p class="eyebrow">YOUR WORKSPACE</p><h1>Surveys that ask<br>the right questions.</h1><p class="muted">Create a form, share it with anyone, and turn responses into insight.</p></div><a class="button button-primary button-large" href="builder.html">Create a survey <span aria-hidden="true">→</span></a></section>
+      <section class="section-heading"><div><h2>Your surveys</h2><p class="muted">Only you can manage your surveys and see their results.</p></div><span id="survey-count" class="count-pill">—</span></section>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+      <section id="survey-list" class="survey-grid" aria-label="Your surveys"><div class="loading-card">Loading your surveys…</div></section>
+    </div>
   </main>
   <script type="module" src="js/index.js"></script>
 </body>

@@ -13,8 +13,9 @@ Because the app uses ES modules, open it through a local HTTP server rather than
 1. Create a project at [Firebase Console](https://console.firebase.google.com/) and add a Web app.
 2. Copy the web app configuration into `js/firebase-config.js`, replacing each `YOUR_…` placeholder. Firebase web config is public client configuration; do not put service account keys or other private credentials in this file.
 3. In Firebase Console, create a Cloud Firestore database.
-4. Publish the rules from `firestore.rules` in Firestore → Rules. This client-only demo allows public survey reads, public response creation, and public response reads so its unauthenticated dashboard can display results. It disallows deletes and response updates. Survey creation/update is also public to support the no-auth builder; use Firebase Authentication and tighter rules before collecting sensitive data.
-5. In Firebase Authentication → Settings → Authorized domains, ensure your GitHub Pages domain is listed if the app needs it for any later auth additions.
+4. In **Authentication → Sign-in method**, enable **Email/Password**. Add `mkpalld2008-cp.github.io` under Authentication → Settings → Authorized domains if it is not already listed.
+5. Publish the rules from `firestore.rules` in Firestore → Rules. Each signed-in user manages only `/users/{uid}/surveys`; published survey documents can be read by anyone who has the share link, and unauthenticated visitors can create responses. Only the owner can read responses/results. Updates and deletes of survey and response documents are denied by the rules; removing a survey marks it unavailable while retaining its response data.
+6. Survey management and results require an email/password account. Respondents can answer a published survey without signing in. This uses a per-user Firestore path, not a separate physical database for every user.
 
 ## Deploy to GitHub Pages
 
@@ -31,9 +32,10 @@ No secrets are needed by the deployment workflow. If you later add private CI cr
 - [x] **Custom survey:** add, remove, reorder, and edit short text, paragraph, multiple choice, checkboxes, dropdown, and 1–5 rating questions; required toggle; survey title and description.
 - [x] **Required or optional answers:** the survey host can set each question as required or optional in the builder; required questions are validated on submission.
 - [x] **Remove surveys:** remove a survey from the active list and disable its share link; existing response data remains stored to honor the no-delete Firestore rules.
-- [x] **Shareable link:** saving creates a Firestore ID, a `survey.html?id=<id>` link, and a copy-link control. Links are relative and work under a GitHub Pages project subpath.
-- [x] **Collect responses:** public survey page, required-field checks, confirmation screen, and Firestore response storage.
-- [x] **Results dashboard:** total response count, choice bar charts, average ratings, text-answer lists, and CSV export.
+- [x] **Shareable link:** saving creates a Firestore ID and an owner-scoped `survey.html?id=<id>&owner=<uid>` link. Links are relative and work under a GitHub Pages project subpath.
+- [x] **Collect responses:** respondents open a public survey link without signing in; required-field checks, confirmation screen, and Firestore response storage.
+- [x] **Results dashboard:** signed-in survey owners see total response count, choice bar charts, average ratings, text-answer lists, and CSV export.
+- [x] **Private survey management:** sign-in is required to create/manage surveys; each account sees its own surveys.
 
 ## Files
 
