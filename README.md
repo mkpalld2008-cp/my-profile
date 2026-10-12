@@ -2,7 +2,7 @@
 
 A responsive, dark themed survey builder made with HTML, CSS, and vanilla JavaScript ES modules. Firebase Firestore stores surveys and responses; Chart.js renders choice summaries. There is no build step.
 
-**Live demo:** `https://<username>.github.io/<repo-name>/` (replace the placeholders after publishing).
+**Live demo:** [https://mkpalld2008-cp.github.io/my-profile/](https://mkpalld2008-cp.github.io/my-profile/)
 
 ## Run locally
 
@@ -22,7 +22,7 @@ Because the app uses ES modules, open it through a local HTTP server rather than
 2. In the repo, open **Settings → Pages → Build and deployment → Source**, select **GitHub Actions**, and save.
 3. The workflow at `.github/workflows/deploy.yml` deploys the repository root on every push to `main`. Its permissions are limited to `contents: read`, `pages: write`, and `id-token: write`.
 4. Open the **Actions** tab and inspect **Deploy to GitHub Pages**. After it succeeds, the workflow's deployment environment shows the live URL.
-5. For a project repository, the URL is `https://<username>.github.io/<repo-name>/`. Replace the Live demo link above with that address.
+5. The live project site is [https://mkpalld2008-cp.github.io/my-profile/](https://mkpalld2008-cp.github.io/my-profile/).
 
 No secrets are needed by the deployment workflow. If you later add private CI credentials, store them under **Settings → Secrets and variables → Actions**; do not commit them.
 
