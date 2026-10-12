@@ -29,6 +29,8 @@ No secrets are needed by the deployment workflow. If you later add private CI cr
 ## Feature checklist
 
 - [x] **Custom survey:** add, remove, reorder, and edit short text, paragraph, multiple choice, checkboxes, dropdown, and 1–5 rating questions; required toggle; survey title and description.
+- [x] **Required or optional answers:** the survey host can set each question as required or optional in the builder; required questions are validated on submission.
+- [x] **Remove surveys:** remove a survey from the active list and disable its share link; existing response data remains stored to honor the no-delete Firestore rules.
 - [x] **Shareable link:** saving creates a Firestore ID, a `survey.html?id=<id>` link, and a copy-link control. Links are relative and work under a GitHub Pages project subpath.
 - [x] **Collect responses:** public survey page, required-field checks, confirmation screen, and Firestore response storage.
 - [x] **Results dashboard:** total response count, choice bar charts, average ratings, text-answer lists, and CSV export.

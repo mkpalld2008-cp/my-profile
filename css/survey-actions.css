@@ -1,0 +1,14 @@
+/* Dashboard actions for copying links and removing a survey from the active list. */
+.button-danger {
+  background: #ff849814;
+  border-color: #ff849833;
+  color: #ff9eae;
+}
+.button-danger:hover {
+  background: #ff849825;
+  border-color: #ff849866;
+}
+@media (max-width: 560px) {
+  .survey-card .card-actions { display: grid; grid-template-columns: 1fr 1fr; }
+  .survey-card .remove-survey { grid-column: 1 / -1; }
+}

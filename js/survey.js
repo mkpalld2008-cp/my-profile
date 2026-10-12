@@ -1,9 +1,85 @@
 import { addDoc, collection, doc, getDoc, increment, serverTimestamp, updateDoc } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { db, configured, showConfigError } from "./firebase.js";
 import { esc, queryId } from "./shared.js";
-const state=document.querySelector("#survey-state"), id=queryId();
-if(!configured)showConfigError(state," and deploy your Firestore rules");
-else if(!id)state.innerHTML=`<div class="empty-state"><h2>Survey link is incomplete</h2><p>Ask the survey owner for a complete link.</p></div>`;
-else try{const ref=doc(db,"surveys",id),snap=await getDoc(ref);if(!snap.exists()){state.innerHTML=`<div class="empty-state"><h2>Survey not found</h2><p>This link may be incorrect or the survey is no longer available.</p></div>`;}else{const s=snap.data();document.title=`${s.title} · Formcraft`;state.innerHTML=`<div class="public-kicker"><span class="brand-mark">F</span> FORMCRAFT SURVEY</div><h1>${esc(s.title)}</h1>${s.description?`<p class="public-description">${esc(s.description)}</p>`:""}<div class="public-divider"></div><form id="response-form" novalidate>${(s.questions||[]).map((q,i)=>`<div class="response-question"><label class="field-label" for="answer-${i}">${esc(q.title)} ${q.required?`<span class="required-mark">*</span>`:`<span class="optional">Optional</span>`}</label>${answerControl(q,i)}</div>`).join("")}<div id="form-error" class="inline-error" role="alert"></div><button class="button button-primary button-large" type="submit">Submit response <span aria-hidden="true">→</span></button></form><p class="privacy-note">Your response is shared with the survey creator.</p>`;document.querySelector("#response-form").addEventListener("submit",async e=>{e.preventDefault();const form=e.currentTarget,err=document.querySelector("#form-error"),answers={};for(const [i,q] of s.questions.entries()){const field=form.elements[`answer-${i}`];let val=q.type==="checkboxes"?[...form.querySelectorAll(`[name="answer-${i}"]:checked`)].map(x=>x.value):field?.value?.trim()||"";if(q.required&&(!val.length)){err.textContent=`Please answer: ${q.title}`;form.querySelector(`#answer-${i}`)?.focus();return;}answers[q.id||String(i)]={question:q.title,type:q.type,value:val};}const submit=form.querySelector("button[type=submit]");submit.disabled=true;submit.textContent="Submitting…";try{await addDoc(collection(db,"surveys",id,"responses"),{answers,submittedAt:serverTimestamp()});await updateDoc(ref,{responseCount:increment(1)});state.innerHTML=`<div class="thank-you"><div class="success-mark">✓</div><p class="eyebrow">RESPONSE RECEIVED</p><h1>Thank you!</h1><p class="muted">Your response has been submitted successfully.</p></div>`;}catch(error){err.textContent=`Couldn’t submit your response: ${error.message}`;submit.disabled=false;submit.innerHTML="Submit response <span aria-hidden=\"true\">→</span>";}});}}
-catch(error){state.innerHTML=`<div class="error-state"><h2>Couldn’t load this survey</h2><p>${esc(error.message)}. The survey may be private or Firebase setup is incomplete.</p></div>`;}
-function answerControl(q,i){const id=`answer-${i}`,req=q.required?"required":"";if(q.type==="short")return `<input id="${id}" name="${id}" class="text-input" maxlength="500" placeholder="Type your answer" ${req}>`;if(q.type==="paragraph")return `<textarea id="${id}" name="${id}" class="text-input" rows="4" maxlength="3000" placeholder="Type your answer" ${req}></textarea>`;if(q.type==="dropdown")return `<select id="${id}" name="${id}" class="text-input" ${req}><option value="">Choose an option</option>${(q.options||[]).map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join("")}</select>`;if(q.type==="choice")return `<div class="choice-list">${(q.options||[]).map(x=>`<label class="choice-option"><input type="radio" name="${id}" value="${esc(x)}" ${req}><span>${esc(x)}</span></label>`).join("")}</div>`;if(q.type==="checkboxes")return `<div class="choice-list">${(q.options||[]).map(x=>`<label class="choice-option"><input type="checkbox" name="${id}" value="${esc(x)}"><span>${esc(x)}</span></label>`).join("")}</div>`;if(q.type==="rating")return `<div class="rating-row" role="radiogroup" aria-label="Rate from 1 to 5">${[1,2,3,4,5].map(n=>`<label class="rating-choice"><input type="radio" id="${id}-${n}" name="${id}" value="${n}" ${req}><span>${n}</span></label>`).join("")}</div><div class="rating-labels"><span>Not at all</span><span>Very much</span></div>`;return "";}
+
+const state = document.querySelector("#survey-state");
+const id = queryId();
+
+if (!configured) showConfigError(state, " and publish your Firestore rules");
+else if (!id) {
+  state.innerHTML = `<div class="empty-state"><h2>Survey link is incomplete</h2><p>Ask the survey owner for a complete link.</p></div>`;
+} else try {
+  const surveyRef = doc(db, "surveys", id);
+  const snapshot = await getDoc(surveyRef);
+  if (!snapshot.exists()) {
+    state.innerHTML = `<div class="empty-state"><h2>Survey not found</h2><p>This link may be incorrect or the survey is no longer available.</p></div>`;
+  } else {
+    const survey = snapshot.data();
+    if (survey.removedAt) {
+      state.innerHTML = `<div class="empty-state"><h2>This survey is no longer available</h2><p>The survey host has removed it from their survey list.</p></div>`;
+    } else {
+      document.title = `${survey.title} · Formcraft`;
+      state.innerHTML = `<div class="public-kicker"><span class="brand-mark">F</span> FORMCRAFT SURVEY</div>
+        <h1>${esc(survey.title)}</h1>${survey.description ? `<p class="public-description">${esc(survey.description)}</p>` : ""}
+        <div class="public-divider"></div>
+        <form id="response-form" novalidate>
+          ${(survey.questions || []).map((question, index) => `<div class="response-question">
+            <label class="field-label" for="answer-${index}">${esc(question.title)} ${question.required ? `<span class="required-mark">*</span>` : `<span class="optional">Optional</span>`}</label>
+            ${answerControl(question, index)}
+          </div>`).join("")}
+          <div id="form-error" class="inline-error" role="alert"></div>
+          <button class="button button-primary button-large" type="submit">Submit response <span aria-hidden="true">→</span></button>
+        </form>
+        <p class="privacy-note">Your response is shared with the survey creator.</p>`;
+      document.querySelector("#response-form").addEventListener("submit", event => submitResponse(event, survey, surveyRef, id));
+    }
+  }
+} catch (error) {
+  state.innerHTML = `<div class="error-state"><h2>Couldn’t load this survey</h2><p>${esc(error.message)}. Check your Firebase configuration and Firestore rules.</p></div>`;
+}
+
+async function submitResponse(event, survey, surveyRef, surveyId) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const errorBox = document.querySelector("#form-error");
+  const answers = {};
+
+  for (const [index, question] of survey.questions.entries()) {
+    const name = `answer-${index}`;
+    const value = question.type === "checkboxes"
+      ? [...form.querySelectorAll(`[name="${name}"]:checked`)].map(input => input.value)
+      : form.elements[name]?.value?.trim() || "";
+
+    if (question.required && (Array.isArray(value) ? !value.length : !value)) {
+      errorBox.textContent = `Please answer: ${question.title}`;
+      form.querySelector(`#answer-${index}`)?.focus();
+      return;
+    }
+    answers[question.id || String(index)] = { question: question.title, type: question.type, value };
+  }
+
+  const submit = form.querySelector("button[type=submit]");
+  submit.disabled = true;
+  submit.textContent = "Submitting…";
+  try {
+    await addDoc(collection(db, "surveys", surveyId, "responses"), { answers, submittedAt: serverTimestamp() });
+    await updateDoc(surveyRef, { responseCount: increment(1) });
+    state.innerHTML = `<div class="thank-you"><div class="success-mark">✓</div><p class="eyebrow">RESPONSE RECEIVED</p><h1>Thank you!</h1><p class="muted">Your response has been submitted successfully.</p></div>`;
+  } catch (error) {
+    errorBox.textContent = `Couldn’t submit your response: ${error.message}`;
+    submit.disabled = false;
+    submit.innerHTML = `Submit response <span aria-hidden="true">→</span>`;
+  }
+}
+
+function answerControl(question, index) {
+  const id = `answer-${index}`;
+  const required = question.required ? "required" : "";
+  if (question.type === "short") return `<input id="${id}" name="${id}" class="text-input" maxlength="500" placeholder="Type your answer" ${required}>`;
+  if (question.type === "paragraph") return `<textarea id="${id}" name="${id}" class="text-input" rows="4" maxlength="3000" placeholder="Type your answer" ${required}></textarea>`;
+  if (question.type === "dropdown") return `<select id="${id}" name="${id}" class="text-input" ${required}><option value="">Choose an option</option>${(question.options || []).map(option => `<option value="${esc(option)}">${esc(option)}</option>`).join("")}</select>`;
+  if (question.type === "choice") return `<div class="choice-list">${(question.options || []).map((option, optionIndex) => `<label class="choice-option"><input id="${optionIndex ? `${id}-${optionIndex}` : id}" type="radio" name="${id}" value="${esc(option)}" ${required}><span>${esc(option)}</span></label>`).join("")}</div>`;
+  if (question.type === "checkboxes") return `<div class="choice-list">${(question.options || []).map((option, optionIndex) => `<label class="choice-option"><input id="${optionIndex ? `${id}-${optionIndex}` : id}" type="checkbox" name="${id}" value="${esc(option)}"><span>${esc(option)}</span></label>`).join("")}</div>`;
+  if (question.type === "rating") return `<div class="rating-row" role="radiogroup" aria-label="Rate from 1 to 5">${[1,2,3,4,5].map(number => `<label class="rating-choice"><input id="${id}-${number}" type="radio" name="${id}" value="${number}" ${required}><span>${number}</span></label>`).join("")}</div><div class="rating-labels"><span>Not at all</span><span>Very much</span></div>`;
+  return "";
+}
