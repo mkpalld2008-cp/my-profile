@@ -1,0 +1,17 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Surveys can be read publicly. The builder can create and update surveys.
+    match /surveys/{surveyId} {
+      allow read: if true;
+      allow create, update: if true;
+      allow delete: if false;
+
+      // The dashboard is client-side, so response reads are public. Never allow deletion.
+      match /responses/{responseId} {
+        allow create, read: if true;
+        allow update, delete: if false;
+      }
+    }
+  }
+}
