@@ -22,14 +22,60 @@
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
   min-height: 100vh;
   margin: 0;
   color: var(--text);
   font-family: var(--body);
-  background:
-    radial-gradient(ellipse at 83% -12%, #a7193024 0, transparent 34rem),
-    radial-gradient(ellipse at 8% 35%, #ffd16608 0, transparent 32rem),
-    var(--bg);
+  background: var(--bg);
+}
+
+/* A low contrast grid and slow moving light sit below all interactive content. */
+body::before,
+body::after {
+  position: fixed;
+  z-index: -1;
+  inset: -2px;
+  content: '';
+  pointer-events: none;
+}
+body::before {
+  background-image:
+    radial-gradient(ellipse at 18% 12%, #b51f342c 0, transparent 48%),
+    radial-gradient(ellipse at 84% 88%, #d28b2522 0, transparent 43%),
+    linear-gradient(to right, #f7f1e809 1px, transparent 1px),
+    linear-gradient(to bottom, #f7f1e809 1px, transparent 1px);
+  background-position: 0% 0%, 100% 100%, center, center;
+  background-size: 145% 145%, 145% 145%, 52px 52px, 52px 52px;
+  -webkit-mask-image: radial-gradient(ellipse at 48% 18%, #000 0%, #000a 48%, transparent 100%);
+  mask-image: radial-gradient(ellipse at 48% 18%, #000 0%, #000a 48%, transparent 100%);
+  animation: ambient-drift 54s ease-in-out infinite alternate;
+}
+body::after {
+  inset: -12px;
+  opacity: .62;
+  background-image:
+    radial-gradient(circle, #ffd166 0 1px, #ffd16655 1.5px, transparent 4px),
+    radial-gradient(circle, #d83a46 0 1px, #d83a4666 1.5px, transparent 4px),
+    radial-gradient(circle, #f2ae45 0 1px, #f2ae4566 1.5px, transparent 4px),
+    radial-gradient(circle, #ffd166 0 1px, #ffd16655 1.5px, transparent 4px),
+    radial-gradient(circle, #c92c3e 0 1px, #c92c3e55 1.5px, transparent 4px),
+    radial-gradient(circle, #e8ac4d 0 1px, #e8ac4d55 1.5px, transparent 4px),
+    radial-gradient(circle, #ffd166 0 1px, #ffd16655 1.5px, transparent 4px);
+  background-repeat: no-repeat;
+  background-position: 11% 22%, 34% 67%, 53% 31%, 72% 18%, 87% 55%, 21% 86%, 64% 79%;
+  background-size: 8px 8px, 7px 7px, 7px 7px, 8px 8px, 7px 7px, 7px 7px, 8px 8px;
+  animation: particle-drift 72s ease-in-out infinite alternate;
+}
+@keyframes ambient-drift {
+  from { background-position: 0% 0%, 100% 100%, center, center; }
+  to { background-position: 7% 5%, 93% 94%, center, center; }
+}
+@keyframes particle-drift {
+  from { transform: translate3d(-3px, 2px, 0); }
+  to { transform: translate3d(5px, -6px, 0); }
 }
 a { color: inherit; text-decoration: none; }
 button, input, textarea, select { font: inherit; }
@@ -87,28 +133,22 @@ textarea:focus-visible, select:focus-visible {
 .hero::before {
   position: absolute;
   z-index: -1;
-  top: -34px;
-  right: 5%;
-  width: min(38vw, 430px);
-  height: 225px;
-  border: 1px solid #ffd1661b;
-  border-left-color: transparent;
-  border-radius: 50%;
-  background: radial-gradient(ellipse, #c3243818, transparent 68%);
+  top: -100px;
+  right: -8%;
+  width: min(78vw, 820px);
+  height: 360px;
+  background:
+    radial-gradient(ellipse at 35% 40%, #c421382b 0, transparent 54%),
+    radial-gradient(ellipse at 82% 70%, #d69b3030 0, transparent 43%);
+  filter: blur(12px);
+  opacity: .78;
   content: '';
-  transform: rotate(-14deg);
+  pointer-events: none;
+  animation: hero-light 32s ease-in-out infinite alternate;
 }
-.hero::after {
-  position: absolute;
-  z-index: -1;
-  top: 14px;
-  right: 13%;
-  width: 112px;
-  height: 112px;
-  border: 1px solid #ffd16622;
-  border-radius: 50%;
-  box-shadow: 0 0 60px #b722321c, inset 0 0 35px #ffd1660a;
-  content: '';
+@keyframes hero-light {
+  from { transform: translate3d(-1%, 0, 0) scale(.98); opacity: .64; }
+  to { transform: translate3d(1%, 2%, 0) scale(1.03); opacity: .86; }
 }
 .eyebrow { margin: 0 0 13px; color: var(--gold); font-size: 10px; font-weight: 700; letter-spacing: 2px; }
 .hero h1, .builder-heading h1, .results-heading h1 {
@@ -342,8 +382,7 @@ textarea:focus-visible, select:focus-visible {
   .hero { gap: 24px; padding: 11px 0 42px; }
   .hero h1 { max-width: 100%; font-size: 40px; }
   .hero .button { align-self: stretch; }
-  .hero::before { top: 20px; right: -5%; width: 240px; height: 155px; }
-  .hero::after { top: 20px; right: 10%; width: 82px; height: 82px; }
+  .hero::before { top: -52px; right: -12%; width: 115%; height: 260px; }
   .survey-grid { grid-template-columns: 1fr; }
   .survey-card { min-height: 210px; }
   .section-heading h2 { font-size: 18px; }
